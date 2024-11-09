@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"time"
 
 	"github.com/caarlos0/env"
@@ -14,6 +15,7 @@ type Config struct {
 func LoadConfig() (Config, error) {
 	var cfg Config
 	if err := env.Parse(&cfg); err != nil {
+		log.Printf("failed to load config: %v", err)
 		return Config{}, err
 	}
 

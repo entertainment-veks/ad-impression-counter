@@ -3,8 +3,10 @@ package handler
 import (
 	"ad_impression_counter/config"
 	"ad_impression_counter/model"
-	"ad_impression_counter/services"
+	"ad_impression_counter/service"
+	"ad_impression_counter/storage"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -51,7 +53,16 @@ func trackImpressionHandler(cfg config.Config) func(w http.ResponseWriter, r *ht
 			Timestamp:  time.Now(),
 		}
 
-		if err := services.TrackImpression(impression, cfg); err != nil {
+		err := service.TrackImpression(impression, cfg)
+		if errors.Is(err, storage.ErrCampaignNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, service.ErrCampaignNotStarted) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

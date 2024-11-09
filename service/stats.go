@@ -1,20 +1,17 @@
-package services
+package service
 
 import (
 	"ad_impression_counter/model"
 	"ad_impression_counter/storage"
-	"errors"
+	"log"
 	"time"
-)
-
-var (
-	ErrCampaignNotFound = errors.New("campaign not found")
 )
 
 func GetCampaignStats(campaignID string) (*model.Stats, error) {
 	_, err := GetCampaign(campaignID)
 	if err != nil {
-		return nil, ErrCampaignNotFound
+		log.Printf("failed to get campaign by ID: %s: %v", campaignID, err)
+		return nil, err
 	}
 
 	impressions := storage.GetImpressionsByCampaign(campaignID)

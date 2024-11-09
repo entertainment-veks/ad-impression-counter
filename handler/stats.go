@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"ad_impression_counter/services"
+	"ad_impression_counter/service"
+	"ad_impression_counter/storage"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -22,8 +23,8 @@ func getCampaignStatsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stats, err := services.GetCampaignStats(campaignID)
-	if errors.Is(err, services.ErrCampaignNotFound) {
+	stats, err := service.GetCampaignStats(campaignID)
+	if errors.Is(err, storage.ErrCampaignNotFound) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}

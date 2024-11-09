@@ -7,6 +7,8 @@ import (
 )
 
 var (
+	ErrCampaignNotFound = errors.New("campaign not found")
+
 	campaigns = sync.Map{}
 )
 
@@ -18,7 +20,7 @@ func CreateCampaign(campaign model.Campaign) error {
 func GetCampaignByID(id string) (model.Campaign, error) {
 	rawCampaign, exists := campaigns.Load(id)
 	if !exists {
-		return model.Campaign{}, errors.New("campaign not found")
+		return model.Campaign{}, ErrCampaignNotFound
 	}
 
 	campaign, ok := rawCampaign.(model.Campaign)

@@ -2,7 +2,7 @@ package handler
 
 import (
 	"ad_impression_counter/model"
-	"ad_impression_counter/services"
+	"ad_impression_counter/service"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -48,7 +48,7 @@ func createCampaignHandler(w http.ResponseWriter, r *http.Request) {
 		StartTime: req.StartTime,
 	}
 
-	if err := services.CreateCampaign(campaign); err != nil {
+	if err := service.CreateCampaign(campaign); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
