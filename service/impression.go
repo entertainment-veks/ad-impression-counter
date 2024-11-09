@@ -8,7 +8,24 @@ import (
 	"time"
 )
 
-func TrackImpression(impression model.Impression, cfg config.Config) error {
+var (
+	impressionsQueue = make(chan model.Impression, 1000)
+)
+
+func AddImpressionToQueue(impression model.Impression) error {
+	impressionsQueue <- impression
+	return nil
+}
+
+func ConsumeAndProcessImpressions(cfg config.Config) {
+	for impression := range impressionsQueue {
+		if err := processImpression(impression, cfg.TTL); err != nil {
+			log.Printf("failed to track impression: %v", err)
+		}
+	}
+}
+
+func processImpression(impression model.Impression, ttl time.Duration) error {
 	campaign, err := GetCampaign(impression.CampaignID)
 	if err != nil {
 		log.Printf("failed to get campaign by ID: %s: %v", impression.CampaignID, err)
@@ -32,11 +49,11 @@ func TrackImpression(impression model.Impression, cfg config.Config) error {
 			oldImpressions[i].AdID == impression.AdID {
 
 			// Once we find the latest impression that has same userId and adId, check if it is within TTL
-			if time.Since(oldImpressions[i].Timestamp) < cfg.TTL {
+			if time.Since(oldImpressions[i].Timestamp) < ttl {
 				return nil // Handling duplicate impression in service layer allows us to return custom error and then return custom response in handler
 			}
 
-			if time.Since(oldImpressions[i].Timestamp) >= cfg.TTL {
+			if time.Since(oldImpressions[i].Timestamp) >= ttl {
 				break // If the latest impression is older than TTL, we can stop the loop and create a new impression
 			}
 		}
