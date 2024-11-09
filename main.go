@@ -19,6 +19,8 @@ func main() {
 	api := r.PathPrefix("/api").Subrouter()
 	apiV1 := api.PathPrefix("/v1").Subrouter()
 
+	handler.RegisterMiddlewares(apiV1)
+
 	handler.RegisterCampaignRoutes(apiV1)
 	handler.RegisterImpressionRoutes(apiV1, cfg)
 	handler.RegisterStatsRoutes(apiV1)
