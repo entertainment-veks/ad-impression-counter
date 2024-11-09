@@ -1,5 +1,75 @@
 # Ad Impression Counter - Code Challenge
 
+## How to start
+```bash
+git clone https://github.com/entertainment-veks/ad-impression-counter
+cd ad-impression-counter
+go run main.go
+```
+
+## Config
+| Configuration         | Type          | Environment Variable            | Default Value | Description                                                                 |
+|-----------------------|---------------|----------------------------------|---------------|-----------------------------------------------------------------------------|
+| ServerPort            | string        | `env:"SERVER_PORT"`              | "8080"        | ServerPort is the port the HTTP server will listen on.                      |
+| TTL                   | time.Duration | `env:"TTL"`                      | "3600s"       | TTL is the duplicate impressions detection window duration in seconds.      |
+| ImpressionsQueueSize  | int           | `env:"IMPRESSIONS_QUEUE_SIZE"`   | 1000          | ImpressionsQueueSize is the size of the impressions queue.                  |
+| ImpressionWorkers     | int           | `env:"IMPRESSION_WORKERS"`       | 10            | ImpressionWorkers is the number of workers that will process impressions. |
+
+In production `ImpressionWorkers` sould be set to the number of CPU cores.
+
+## How to interact
+To create ad campaign we have to call POST `/api/v1/campaigns` endpoint, example: 
+```bash
+curl --location 'http://localhost:8080/api/v1/campaigns' \
+--header 'Content-Type: application/json' \
+--data '{
+           "name": "Test Campaign",
+           "start_time": "2024-11-09T16:29:00Z"
+         }'
+``` 
+Please, pay attention to the `start_time`, it has to be in the future. 
+Otherwise we will receive an error. 
+This endpoint work synchronously. 
+
+To track impression we have to call POST `/api/v1/impressions` endpoint, example:
+```bash
+curl --location 'http://localhost:8080/api/v1/impressions' \
+--header 'Content-Type: application/json' \
+--data '{
+           "campaign_id": "b7da5a35-0974-4b7b-ab5d-576e9e628d80",
+           "user_id": "user-1",
+           "ad_id": "ad-1"
+         }'
+```
+Please make sure to set the `campaign_id` to the one retrieved from the response of Create Campaign endpoint.
+This endpoint work asynchronously. 
+
+To check statistics we have to call GET `` endpoint, example:
+```bash
+curl --location 'http://localhost:8080/api/v1/campaigns/b7da5a35-0974-4b7b-ab5d-576e9e628d80/stats'
+```
+Please make sure to set the `campaign_id` in URL to the one retrieved from the response of Create Campaign endpoint.
+
+## How it works?
+Create campaign is a synchronic endpoint, that create a campaign for us.
+It has `start_time` field, that has to be in the future 
+and any provided impession tracks will be discarded until `start_time` is in future.
+
+Track impression is an asynchronic endpoint, that put all calls in a queue, 
+that furter going to be consumed by workers. Queue size can be configured with `IMPRESSIONS_QUEUE_SIZE` env variable, by default - 1000. 
+
+Workers are working in a backgound, we can configure their quantity with `IMPRESSION_WORKERS` env variable, by default - 10. 
+In case of any errors (campaign doesn't exist/didn't start yet) worker just discard an impression.
+
+Get stats is a synchronic endpoint, that return us statistics for the campaign.
+
+All impressions are stored as a concurrent-safe map from sync.Map, where `key` is campaign id and `value` is a slice of impressions, sorted by time added. 
+As result we can save with O(1) complexity in the end of the slice that can be retrived with O(1) by capmaign id from sync.Map.
+And we can count stats with O(n) complexity when we iterate the slice with only relevant impressions, that can be retrived with O(1) from the map.
+Also, since we have sorted by added time impressions, we are able to stop on 24 hour old impressions and count total count with len(slice).
+
+# Task:
+
 ## Ad Impression Counter - Test Assignment
 Create a concurrent service that tracks ad impressions across multiple campaigns in real-time, with mechanisms to avoid counting duplicate impressions from the same user within a specified time period.
 
