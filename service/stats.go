@@ -14,20 +14,32 @@ func GetCampaignStats(campaignID string) (*model.Stats, error) {
 		return nil, err
 	}
 
-	impressions := storage.GetImpressionsByCampaign(campaignID)
+	impressions, err := storage.GetImpressionsByCampaign(campaignID)
+	if err != nil {
+		log.Printf("failed to get impressions by campaign ID: %s: %v", campaignID, err)
+		return nil, err
+	}
 
 	stats := &model.Stats{
 		CampaignID: campaignID,
+		LastHour:   0,
+		LastDay:    0,
+		TotalCount: int64(len(impressions)),
 	}
 
-	for _, impression := range impressions {
-		if time.Since(impression.Timestamp) <= time.Hour {
+	// Since impressions are sorted by timestamp, we can iterate them in reverse order to not check impressions older than 24 hours
+	for i := len(impressions) - 1; i >= 0; i-- {
+		if time.Since(impressions[i].Timestamp) < time.Hour {
 			stats.LastHour++
 		}
-		if time.Since(impression.Timestamp) <= 24*time.Hour {
+
+		if time.Since(impressions[i].Timestamp) < 24*time.Hour {
 			stats.LastDay++
 		}
-		stats.TotalCount++
+
+		if time.Since(impressions[i].Timestamp) >= 24*time.Hour {
+			break // No need to check older impressions, because total count is already calculated by len(impressions)
+		}
 	}
 
 	return stats, nil
