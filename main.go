@@ -28,8 +28,8 @@ func main() {
 	handler.RegisterImpressionRoutes(apiV1, cfg)
 	handler.RegisterStatsRoutes(apiV1)
 
-	log.Println("Starting server on port 8080...")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	log.Printf("Starting server on port %s...\n", cfg.ServerPort)
+	if err := http.ListenAndServe(":"+cfg.ServerPort, r); err != nil {
 		log.Fatalf("Could not start server: %s\n", err.Error())
 	}
 }

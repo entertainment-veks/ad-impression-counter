@@ -28,7 +28,6 @@ func ConsumeAndProcessImpressions(cfg config.Config) {
 func processImpression(impression model.Impression, ttl time.Duration) error {
 	campaign, err := GetCampaign(impression.CampaignID)
 	if err != nil {
-		log.Printf("failed to get campaign by ID: %s: %v", impression.CampaignID, err)
 		return err
 	}
 
