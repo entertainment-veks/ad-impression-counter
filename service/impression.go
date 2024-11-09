@@ -33,7 +33,7 @@ func TrackImpression(impression model.Impression, cfg config.Config) error {
 
 			// Once we find the latest impression that has same userId and adId, check if it is within TTL
 			if time.Since(oldImpressions[i].Timestamp) < cfg.TTL {
-				return nil // Handling duplicate impression in service layer gives us opportunity to return custom error and then return custom response in handler
+				return nil // Handling duplicate impression in service layer allows us to return custom error and then return custom response in handler
 			}
 
 			if time.Since(oldImpressions[i].Timestamp) >= cfg.TTL {
