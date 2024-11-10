@@ -1,0 +1,119 @@
+openapi: 3.0.0
+info:
+  title: Ad Impression Counter API
+  version: 1.0.0
+
+paths:
+  /api/v1/campaigns:
+    post:
+      summary: Create a new ad campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                start_time:
+                  type: string
+                  format: date-time
+                  description: Must be in the future
+              required:
+                - name
+                - start_time
+
+      responses:
+        '201':
+          description: Campaign created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  message:
+                    type: string
+                required:
+                  - id
+                  - message
+        '400':
+          description: Invalid input, object invalid
+        '500':
+          description: Internal server error
+
+  /api/v1/impressions:
+    post:
+      summary: Track an ad impression
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                campaign_id:
+                  type: string
+                user_id:
+                  type: string
+                ad_id:
+                  type: string
+              required:
+                - campaign_id
+                - user_id
+                - ad_id
+      responses:
+        '202':
+          description: Impression tracked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                required:
+                  - message
+        '400':
+          description: Invalid input, object invalid
+        '500':
+          description: Internal server error
+
+  /api/v1/campaigns/{campaign_id}/stats:
+    get:
+      summary: Get campaign statistics
+      parameters:
+        - name: campaign_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Campaign statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaign_id:
+                    type: string
+                  last_hour:
+                    type: integer
+                  last_day:
+                    type: integer
+                  total:
+                    type: integer
+                required:
+                  - campaign_id
+                  - last_hour
+                  - last_day
+                  - total
+        '400':
+          description: Invalid input, object invalid
+        '404':
+          description: Campaign not found
+        '500':
+          description: Internal server error

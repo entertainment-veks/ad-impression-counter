@@ -18,6 +18,8 @@ go run main.go
 In production `ImpressionWorkers` sould be set to the number of CPU cores.
 
 ## How to interact
+Entire documentation is described in [swagger.yaml](./swagger.yaml).
+
 To create ad campaign we have to call POST `/api/v1/campaigns` endpoint, example: 
 ```bash
 curl --location 'http://localhost:8080/api/v1/campaigns' \
@@ -44,7 +46,7 @@ curl --location 'http://localhost:8080/api/v1/impressions' \
 Please make sure to set the `campaign_id` to the one retrieved from the response of Create Campaign endpoint.
 This endpoint work asynchronously. 
 
-To check statistics we have to call GET `` endpoint, example:
+To check statistics we have to call GET `/api/v1/campaigns/{campaign_id}/stats` endpoint, example:
 ```bash
 curl --location 'http://localhost:8080/api/v1/campaigns/b7da5a35-0974-4b7b-ab5d-576e9e628d80/stats'
 ```
@@ -67,6 +69,9 @@ All impressions are stored as a concurrent-safe map from sync.Map, where `key` i
 As result we can save with O(1) complexity in the end of the slice that can be retrived with O(1) by capmaign id from sync.Map.
 And we can count stats with O(n) complexity when we iterate the slice with only relevant impressions, that can be retrived with O(1) from the map.
 Also, since we have sorted by added time impressions, we are able to stop on 24 hour old impressions and count total count with len(slice).
+
+Such storage solution can be optimised with using lock-free map like [cornelk hashmap](https://github.com/cornelk/hashmap). 
+But in accordance with the task I decided to not use external library.
 
 # Task:
 

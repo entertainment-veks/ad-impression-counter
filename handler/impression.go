@@ -56,7 +56,7 @@ func trackImpressionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Impression tracked successfully"})
 
 }
